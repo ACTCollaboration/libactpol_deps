@@ -1,0 +1,10 @@
+#------------------------------------------------------------------------------
+# slim:  file(1) magic for slim (physics data compression program)
+# See http://sourceforge.net/projects/slimdata
+0	string	      SL	slim compressed data
+>6	byte	      &0x10	\b, single-channel
+>2	date	      x		\b, last modified %s
+>6	byte	      &1        
+>>7     lelong	      x         \b, raw size %d
+>6	byte	      &2
+>>&4    string        x         \b, was %s

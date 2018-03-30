@@ -1,0 +1,20 @@
+slim/examples
+
+Joe Fowler, NIST
+23 September 2013
+
+-------------------------------------------------------------------
+
+This directory contains some example projects where a new binary is
+built using the slimlib library.
+
+The command-line slim binary is suitable only for the simplest of
+binary files.  The binary cannot compress files containing channels
+with more than one size, any complicated repetition pattern, or any
+kind of file header.  For such files, you'll have to write a new
+binary that's aware of the files' specifics.
+
+Directories:
+
+* ljhslim - slims raw microcalorimeter data files of the "LJH" type.
+ 

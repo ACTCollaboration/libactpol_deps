@@ -1,0 +1,1019 @@
+8/20/07
+
+Did some of the TO DO.  Now list is:
+
+Short term TO DO:
+
+* Fix use of signed/unsigned short in reduced-binary and runlength.
+** Make code/decode work.
+** Rename variable types in terms of uint32_t, int32_t, etc.
+* Revise writeup to current reality.
+* Write up results on coders not used (appendix?)
+* Make it more automatically switch between coders.
+* Fix CRC read bug.
+
+
+Longer term:
+
+* See if the number of data tested makes sense.
+* Make an mce_slim
+** Accept filename(s)
+** Read header to get geometry
+* Make a flatfile_slim
+
+
+
+8/15/07
+
+Fixed problems in Huffman coding.  Latest results (left as normal,
+right with CRC-32 on.)
+
+[fowler@wiess slim]$ ./run_profile.py
+                     Compress Expand  Compress   Compress Expand  Compression
+Program                time    time    ratio   	  time    time    ratio	 
+----------            -------  -----  -------    -------  -----  -------	 
+Reduced binary         0.146   0.140  1.74541	  0.195   0.187  1.74523	 
+Code A                 0.158   0.143  1.77364	  0.208   0.192  1.77344	 
+Code B                 0.217   0.207  1.78524	  0.275   0.251  1.78505	 
+Huffman                0.333   0.423  1.84739	  0.387   0.465  1.84718	 
+Reduced binary delt    0.159   0.153  1.82733	  0.202   0.198  1.82713	 
+Code Adelt             0.163   0.156  1.86215	  0.205   0.204  1.86194	 
+Code Bdelt             0.223   0.221  1.90411	  0.270   0.268  1.90389	 
+Huffman delt           0.355   0.512  1.94019	  0.400   0.477  1.93996	 
+
+compress                                          1.423   0.620  1.31605
+gzip --fast                                       1.253   0.562  1.60515
+bzip2 --fast                                      6.207   1.918  1.98967
+----------            -------  -----  -------	 -------  -----  -------	 
+File name DATA/tescat				 			 
+Original size 17301504				 				 
+                     Compress Expand  Compress  Compress Expand  Compression
+Program                time    time    ratio	  time    time    ratio	 
+----------            -------  -----  -------	 -------  -----  -------	 
+Reduced binary         0.172   0.202  2.55968	  0.226   0.256  2.55967	 
+Code A                 0.173   0.208  2.58834	  0.230   0.262  2.58832	 
+Code B                 0.261   0.674  2.59242	  0.313   0.342  2.59241	 
+Huffman                0.390   0.567  2.71044	  0.436   0.641  2.71043	 
+Reduced binary delt    0.173   0.213  3.55330	  0.231   0.265  3.55328	 
+Code Adelt             0.178   0.213  3.65914	  0.236   0.268  3.65911	 
+Code Bdelt             0.261   0.304  3.67646	  0.317   0.357  3.67643	 
+Huffman delt           0.396   0.502  3.85116	  0.452   0.564  3.85113	 
+----------            -------  -----  -------	 -------  -----  -------	 
+File name DATA/thermom				 				 
+Original size 20163360				 				 
+
+
+Short term TO DO:
+
+* Remove huffman and code A+B variants (put code A into
+  Reduced-binary).
+** From factory functions
+** From CVS
+** From Makefile
+* Verify that signed and unsigned ints work.
+* Fix use of signed/unsigned short in reduced-binary and runlength.
+* Profiling: try to improve decompress.
+* Revise writeup to current reality.
+* Write up results on coders not used (appendix?)
+* Make it more automatically switch between coders.
+* Fix CRC read bug.
+
+
+Longer term:
+
+* See if the number of data tested makes sense.
+* Make an mce_slim
+** Accept filename(s)
+** Read header to get geometry
+* Make a flatfile_slim
+
+
+8/14/07
+
+Code tuning on compression side.  Leads to:
+
+[fowler@wiess slim]$ ./run_profile.py
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.153   0.140  1.74541
+Code A                 0.162   0.144  1.77364
+Code B                 0.235   0.208  1.78524
+Reduced binary delt    0.159   0.154  1.82733
+Code Adelt             0.168   0.152  1.86215
+Code Bdelt             0.232   0.218  1.90411
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.175   0.196  2.55968
+Code A                 0.175   0.205  2.58834
+Code B                 0.251   0.291  2.59242
+Reduced binary delt    0.179   0.201  3.55330
+Code Adelt             0.180   0.207  3.65914
+Code Bdelt             0.304   0.297  3.67646
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+
+8/6/07
+
+Bit-rotation scheme for handling housekeeping data (use -b flag) seems
+to work with or without deltas.  After/before:
+
+[fowler@wiess slim]$ ./run_profile.py
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.174   0.213  2.55968
+Code A                 0.174   0.223  2.58834
+Code B                 0.313   0.326  2.55769
+Reduced binary delt    0.177   0.243  3.55330
+Code Adelt             0.176   0.244  3.65914
+Code Bdelt             0.308   0.329  3.61213
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+[fowler@wiess slim]$ ./run_profile.py
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.188   0.216  1.73898
+Code A                 0.188   0.223  1.75216
+Code B                 0.326   0.301  1.73816
+Reduced binary delt    0.191   0.234  2.14685
+Code Adelt             0.188   0.236  2.18513
+Code Bdelt             0.344   0.320  2.16804
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+
+8/3/07
+
+Halfway fixed broken codeA.  md5sum now works, but look at how TES data
+compresses fine while thermom does NOT:
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.160   0.153  1.74544
+Code A                 0.177   0.154  1.77367
+Code B                 0.240   0.218  1.78259
+Reduced binary delt    0.169   0.178  1.82736
+Code Adelt             0.178   0.179  1.86219
+Code Bdelt             0.248   0.238  1.90191
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.181   0.205  1.73898
+Code A                 0.197   0.227  1.49093
+Code B                 0.320   0.300  1.73816
+Reduced binary delt    0.188   0.229  2.14685
+Code Adelt             0.202   0.243  1.79328
+Code Bdelt             0.312   0.315  2.16804
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+
+8/2/07
+
+Did same tricks to decoding stage.  Here's before/after times.  Notice
+how the expand time is much more in line with the compress time.
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.158   0.243  1.74546
+Code B                 0.233   0.309  1.78262
+Code Adelt             0.161   0.255  1.82739
+Code Bdelt             0.245   0.317  1.90194
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.179   0.328  1.73898
+Code B                 0.304   0.413  1.73816
+Code Adelt             0.173   0.354  2.14685
+Code Bdelt             0.290   0.428  2.16805
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+[fowler@wiess slim]$ ./run_profile.py
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.158   0.172  1.74546
+Code B                 0.240   0.237  1.78262
+Code Adelt             0.161   0.187  1.82739
+Code Bdelt             0.237   0.249  1.90194
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.179   0.257  1.73898
+Code B                 0.313   0.337  1.73816
+Code Adelt             0.174   0.272  2.14685
+Code Bdelt             0.299   0.348  2.16805
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+And a little further tuning on the loop in slim_channel_decode::decode
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.153   0.158  1.74546
+Code B                 0.230   0.215  1.78262
+Code Adelt             0.158   0.177  1.82739
+Code Bdelt             0.228   0.235  1.90194
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.180   0.206  1.73898
+Code B                 0.312   0.306  1.73816
+Code Adelt             0.179   0.237  2.14685
+Code Bdelt             0.301   0.301  2.16805
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+Finally
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.160   0.149  1.74544
+Code B                 0.241   0.216  1.78259
+Code Adelt             0.166   0.176  1.82736
+Code Bdelt             0.249   0.236  1.90191
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.176   0.204  1.73898
+Code B                 0.311   0.297  1.73816
+Code Adelt             0.181   0.228  2.14685
+Code Bdelt             0.304   0.315  2.16804
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+Also noticed something potentially useful: 5, 6, 7, or 8 least sig
+bits of the 100 Hz AMCP channels are zero!
+
+More specifically, no channel seems to exercise any more than 24 of
+their bits.  This sounds suspiciously close to what you'd get if you
+converted an IEEE 754 single-precision float into binary integers.
+
+See the same property in the ambient thermoms
+
+[fowler@wiess slim]$ pushd /data/merged/1172818993.1185570019; for f in `ll |awk '$5==2016336 {print $9}'`; do echo $f;  od -tx4 $f | head -3; done; popd /data/merged/1172818993.1185570019 ~/Act/Computers/slim
+aux_extra1
+0000000 806ff400 80701e00 80700300 80700100
+0000020 80700f00 806fcf00 806f8100 806f7e00
+0000040 806f9600 806fb000 806fdb00 80700c00
+aux_extra2
+0000000 8070c400 8070f700 8070dd00 8070dc00
+0000020 8070ea00 8070a900 80705b00 80705900
+0000040 80706e00 80708000 8070ae00 8070e200
+aux_extra3
+0000000 80845600 80848300 80847300 80848200
+0000020 80849500 80845000 8083fb00 8083ef00
+0000040 80840000 80841e00 80845000 80847700
+bbc_serial
+0000000 04f111d9 04f111dd 04f111e1 04f111e5
+0000020 04f111e9 04f111ed 04f111f1 04f111f5
+0000040 04f111f9 04f111fd 04f11201 04f11205
+calbol_c7
+0000000 801b9f00 801ba000 801b9600 801b9c00
+0000020 801ba700 801ba100 801b9b00 801b9a00
+0000040 801b8e00 801b7d00 801b7300 801b6f00
+cryo_p
+0000000 6b5d6e00 6b5dd100 6b5df280 6b5df580
+0000020 6b5ddf80 6b5dbf80 6b5d9780 6b5d5a80
+0000040 6b5d5000 6b5d9980 6b5dca80 6b5dba00
+det_serv_c4
+0000000 80118c00 80118f00 80118700 80118700
+0000020 80119000 80118c00 80118700 80118900
+0000040 80117e00 80116c00 80115d00 80115700
+fb1_he3p_c2
+0000000 801daf00 801db500 801dad00 801db400
+0000020 801dc500 801dc300 801dbd00 801dbc00
+0000040 801daa00 801d8c00 801d8700 801d8e00
+fb1_he4p_c1
+0000000 80275d00 80276300 80275d00 80276700
+0000020 80277200 80276500 80275b00 80275f00
+0000040 80275500 80273e00 80273200 80273200
+fb2_he4p_c3
+0000000 802b3a00 802b4200 802b4300 802b4e00
+0000020 802b5200 802b3b00 802b2a00 802b3100
+0000040 802b3000 802b1b00 802b0c00 802b0b00
+mag_x
+0000000 92179e00 9215fb00 9216db00 9217b600
+0000020 92163600 92178100 92177200 92161f00
+0000040 9217d200 92173400 92167100 92183800
+mag_y
+0000000 61fdfd80 62010900 61feec80 61fe5200
+0000020 62010400 61fe5000 61feca80 6200c200
+0000040 61fdd100 61ff3f00 62000a80 61fd3880
+mag_z
+0000000 8b06d800 8b076a00 8b090000 8b066b00
+0000020 8b080400 8b08c200 8b061100 8b084200
+0000040 8b080000 8b05e500 8b087d00 8b075700
+pwm7_calbol
+0000000 41200000 41200000 41200000 41200000
+*
+7542120
+raw_roxref
+0000000 6778e500 67771780 6779e980 677b3600
+0000020 6777f700 67771700 677a7880 677aa300
+0000040 6776ef80 67776780 677b7280 677a9e80
+serv_4ko_c6
+0000000 80218500 80218700 80217d00 80218000
+0000020 80218b00 80218700 80218400 80218800
+0000040 80217d00 80216a00 80215d00 80215600
+serv_600_c5
+0000000 801bfe00 801c0000 801bf500 801bf500
+0000020 801bfe00 801bf900 801bf500 801bf900
+0000040 801bf100 801bde00 801bce00 801bc700
+sparech_c8
+0000000 802b8500 802b8c00 802b8500 802b8e00
+0000020 802b9c00 802b9400 802b8e00 802b8800
+0000040 802b7800 802b6200 802b5300 802b4f00
+td00_60k_ot_end
+0000000 7b278a80 7b279a00 7b279b00 7b279d00
+0000020 7b27a180 7b279500 7b278280 7b277880
+0000040 7b276e00 7b276a00 7b277780 7b278a80
+td01_4k_ot
+0000000 3b666240 3b666a00 3b6665c0 3b665e80
+0000020 3b665b40 3b664a80 3b663ac0 3b663540
+0000040 3b6631c0 3b663640 3b6644c0 3b665740
+td02_fb1_he4pmp
+0000000 3ad7ef80 3ad7f880 3ad7f540 3ad7f580
+0000020 3ad7fe00 3ad7ff00 3ad7f880 3ad7ee80
+0000040 3ad7e900 3ad7ef00 3ad7fb40 3ad80800
+td03_fb1_he4cp
+0000000 389c2740 389b3a00 389a07c0 3898a180
+0000020 3896f700 3894fc40 3892d200 38908cc0
+0000040 388e1240 388b7e40 3888edc0 38866940
+td04_fb1_he3pmp
+0000000 ff931a00 ff934800 ff937c00 ff93c400
+0000020 ff93dc00 ff93b300 ff937f00 ff934b00
+0000040 ff930a00 ff92ee00 ff931000 ff934300
+td05_none
+0000000 00000000 00000000 00000000 00000000
+*
+7542120
+td06_none
+0000000 ffba6a00 ffba7400 ffba6f00 ffba6f00
+0000020 ffba7300 ffba6400 ffba5000 ffba4f00
+0000040 ffba5000 ffba5800 ffba6500 ffba7300
+td07_fb2_he4cp
+0000000 38e66500 38e5b340 38e4ce00 38e3c4c0
+0000020 38e29280 38e12dc0 38dfae40 38de2600
+0000040 38dc8c00 38daf780 38d96680 38d7d4c0
+td08_fb2_he4pmp
+0000000 3d316f00 3d3176c0 3d3174c0 3d317940
+0000020 3d316e80 3d314f40 3d313a00 3d313e80
+0000040 3d314e00 3d315740 3d3159c0 3d316800
+td09_600_db
+0000000 33175440 33175c80 33174f00 33175340
+0000020 33175ec0 33175380 331745c0 33174000
+0000040 33174000 331741c0 33174e00 33176100
+tr00_fb1_he3cp
+0000000 205bf6c0 205d4ec0 205ceb00 205b7f40
+0000020 205c4400 205de140 205ccf80 205ae600
+0000040 205bce00 205de140 205d7c40 205bf440
+tr01_fb1_he3pt
+0000000 5425c300 5423eb80 54269d80 54280680
+0000020 54252380 54245c00 54275f00 54277600
+0000040 54242e00 5424cf80 5428ac00 54281600
+tr02_300_holder
+0000000 4da4cc80 4da5cb80 4da53800 4da46300
+0000020 4da57580 4da68c00 4da52a80 4da3cc00
+0000040 4da50680 4da6c980 4da66680 4da56680
+tr03_300_card
+0000000 ffffffff ffffffff ffffffff ffffffff
+*
+7542120
+tr04_none
+0000000 1ff1a8a0 1ff55180 1ff239e0 1fef0d60
+0000020 1ff2fca0 1ff5e480 1ff13740 1fee52a0
+0000040 1ff2f480 1ff5be60 1ff1d300 1ff05fe0
+tr05_none
+0000000 20114300 2014dfc0 20123440 200f08c0
+0000020 20126e80 201560c0 20115200 200e5ac0
+0000040 20125880 201508c0 20117a00 200fe740
+tr06_600_baffle
+0000000 3fbfbb80 3fc074c0 3fc01c40 3fbf4640
+0000020 3fbfd540 3fc0e300 3fc036c0 3fbf0600
+0000040 3fbfb6c0 3fc12080 3fc0d580 3fbfd880
+tr07_none
+0000000 2006a640 2008ea80 20075340 20054d80
+0000020 200789c0 20099bc0 20070e40 2004d7c0
+0000040 20072880 20091900 2006ffc0 2005c680
+tr08_none
+0000000 1f5e2060 1f5f6640 1f5954e0 1f569620
+0000020 1f5c86a0 1f6034e0 1f5cf080 1f5bc240
+0000040 1f5e8de0 1f5d9240 1f5afe40 1f5c4d20
+tr09_fb2_he4pt
+0000000 3d2a8080 3d2e4900 3d2a6300 3d274b00
+0000020 3d2bfc80 3d2ec8c0 3d295c00 3d26b5c0
+0000040 3d2c3380 3d2e8080 3d2998c0 3d288ec0
+tr10_none
+0000000 ffffffff ffffffff ffffffff ffffffff
+*
+7542120
+
+
+
+8/1/07
+
+Added an encode_whole_section() method of slim_channel_encode as a
+quick test of what happens when you change from a 500,000 frames * 1
+chan * 1 rep to 1 frame * 1 chan * 500,000 reps.
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.196   0.288  1.74546
+Code A                 0.198   0.299  1.74546
+Code B                 0.280   0.362  1.78262
+Reduced binary delt    0.197   0.309  1.82739
+Code Adelt             0.196   0.311  1.82739
+Code Bdelt             0.283   0.414  1.90194
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Reduced binary         0.219   0.368  1.73898
+Code A                 0.218   0.337  1.73898
+Code B                 0.357   0.412  1.73816
+Reduced binary delt    0.213   0.386  2.14685
+Code Adelt             0.211   0.374  2.14685
+Code Bdelt             0.349   0.436  2.16805
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+We can replicate these results with a much simpler change: when only
+one channel, force there to be 1 frame with many repetitions.  Here's
+a comparison, dropping the "reduced binary" method.
+
+OLD WAY:
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.273   0.331  1.74546
+Code B                 0.352   0.397  1.78262
+Code Adelt             0.269   0.364  1.82739
+Code Bdelt             0.345   0.592  1.90194
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.326   0.384  1.73898
+Code B                 0.452   0.482  1.73816
+Code Adelt             0.293   0.423  2.14685
+Code Bdelt             0.478   0.511  2.16805
+----------            -------  -----  ------- 
+File name DATA/thermom
+Original size 20163360
+
+NEW WAY:
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.195   0.239  1.74535
+Code B                 0.285   0.307  1.78249
+Code Adelt             0.193   0.257  1.82726
+Code Bdelt             0.284   0.325  1.90180
+gzip --fast            1.209   0.544  1.60515
+bzip2 --fast           5.258   1.843  1.98967
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.230   0.327  1.73898
+Code B                 0.354   0.407  1.73816
+Code Adelt             0.214   0.341  2.14684
+Code Bdelt             0.349   0.421  2.16804
+gzip --fast            1.064   0.550  2.25145
+bzip2 --fast           5.895   1.865  3.51860
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+After some code tweaking:
+
+                     Compress Expand  Compress  Compress Expand  Compress
+Program                time    time    ratio      time    time    ratio  
+----------            -------  -----  -------    -------  -----  -------  
+Code A                 0.157   0.238  1.74535     0.273   0.331  1.74546 
+Code B                 0.237   0.306  1.78249     0.352   0.397  1.78262 
+Code Adelt             0.165   0.257  1.82726     0.269   0.364  1.82739 
+Code Bdelt             0.241   0.318  1.90180     0.345   0.592  1.90194 
+----------            -------  -----  -------    -------  -----  ------- 
+File name DATA/tescat			       			      
+Original size 17301504			       			      
+                     Compress Expand  Compressi Compress Expand  Compress
+Program                time    time    ratio      time    time    ratio  
+----------            -------  -----  -------    -------  -----  ------- 
+Code A                 0.179   0.321  1.73898     0.326   0.384  1.73898 
+Code B                 0.311   0.404  1.73816     0.452   0.482  1.73816 
+Code Adelt             0.175   0.337  2.14684     0.293   0.423  2.14685 
+Code Bdelt             0.302   0.462  2.16804     0.478   0.511  2.16805 
+----------            -------  -----  -------    -------  -----  ------- 
+File name DATA/thermom
+Original size 20163360
+
+
+
+
+7/31/07
+
+Have a good slim binary working.  The merged TES data from 1172818993
+are all concatenated together into DATA/tescat (size 17,301,504
+bytes).  Also put together all diode thermometers (10 diodes, 504,084
+samples each) into DATA/thermom.  Size is 20,163,360 bytes.  Not sure
+why codeB is so bad in the thermom???
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.277   0.296  1.77365
+Code B                 0.347   0.351  1.78263
+Huffman                0.454   0.649  1.84745
+Code Adelt             0.264   0.345  1.86222
+Code Bdelt             0.723   0.384  1.90192
+Huffman delt           0.453   0.694  1.94026
+compress               1.506   0.646  1.31605
+gzip --fast            1.266   0.557  1.60515
+gzip --best           16.831   0.476  1.67205
+bzip2 --fast           5.444   1.995  1.98967
+bzip2 --best           6.342   2.693  1.84687
+----------            -------  -----  -------
+File name DATA/tescat
+Original size 17301504
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.296   0.367  1.75216
+Code B                 1.056   0.445  1.73638
+Huffman                0.517   0.779  1.80732
+Code Adelt             0.278   0.431  2.18513
+Code Bdelt             0.928   0.529  2.16704
+Huffman delt           0.528   0.733  2.25209
+compress               1.629   0.544  2.23015
+gzip --fast            1.123   0.578  2.25145
+gzip --best           22.520   0.423  2.57600
+bzip2 --fast           5.594   1.975  3.51860
+bzip2 --best           9.171   2.820  3.73844
+----------            -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+Compare WITH to WITHOUT CRC-32.  Pay most attention to Adelt, which is
+our likely code. 
+                            WITH CRC-32                 No CRC
+                     Compress Expand  Compress Compress Expand  Compres
+Program                time    time    ratio     time    time    ratio 
+----------            -------  -----  -------   -------  -----  -------
+Code A                 0.318   0.348  1.77346    0.275   0.301  1.77365
+Code B                 0.396   0.407  1.78244    0.342   0.398  1.78263
+Huffman                0.510   0.698  1.84724    0.477   0.616  1.84745
+Code Adelt             0.311   0.374  1.86201    0.259   0.349  1.86222
+Code Bdelt             0.383   0.428  1.90170    0.341   0.416  1.90192
+Huffman delt           0.564   0.702  1.94003    0.484   0.690  1.94026
+----------            -------  -----  -------   -------  -----  -------
+File name DATA/tescat			       			     
+Original size 17301504			      
+                     Compress Expand  Compress Compress Expand  Compres
+Program                time    time    ratio     time    time    ratio 
+----------            -------  -----  -------   -------  -----  -------
+Code A                 0.356   0.417  1.75216    0.296   0.367  1.75216
+Code B                 1.063   0.544  1.73638    1.006   0.443  1.73638
+Huffman                0.570   0.920  1.80731    0.515   0.782  1.80732
+Code Adelt             0.342   0.450  2.18512    0.284   0.430  2.18513
+Code Bdelt             0.976   0.569  2.16703    0.871   0.516  2.16704
+Huffman delt           0.574   0.816  2.25208    0.498   0.725  2.25209
+----------            -------  -----  -------   -------  -----  -------
+File name DATA/thermom
+Original size 20163360
+
+
+
+
+4/12/07 
+
+Next plans:
+
+* Change estimation game: don't work with sigma or MAD.  Instead, for
+  each data point in sample, compute number of bits needed.  Keep
+  histogram of it.  Choose nbits using histogram.
+
+* Add HK+spec parsing to compress HK chunks.
+
+* FITS files (once I learn CCfits)
+
+* Huffman coding
+
+	Finally have I16 encoding/decoding working.  No substantial
+changes in the compression ratio or time.  Looks ready to go.   See
+below: hk_fake2.dat is the same file with 2 extra I16 columns of data
+glued on to it.
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.215   0.289  1.45809
+Code B                 0.279   0.340  1.49853
+Code Adelt             0.210   0.352  1.99617
+Code Bdelt             0.283   0.368  2.08207
+----------            -------  -----  -------
+File name hk_fake2.dat
+Original size 17000000
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.204   0.277  1.45422
+Code B                 0.265   0.320  1.49445
+Code Adelt             0.201   0.291  2.01130
+Code Bdelt             0.270   0.341  2.09744
+----------            -------  -----  -------
+File name hk_fake.dat
+Original size 16500000
+
+
+4/4/07  Adding some I16 channels to hk_fake.dat; call it hk_fake2.dat
+
+n=125000
+i1=fix(20*randomn(seed,n)+findgen(n)*.003-4e-8*findgen(n)^2)
+i2=fix(80*randomn(seed,n)+3e-8*findgen(n)^2)
+plot,i1
+openw,lun,'temp.dat',/get_lun
+writeu,lun,i1
+writeu,lun,i2
+free_lun,lun
+<shell>
+cat hk_fake.dat temp.dat >> hk_fake2.dat
+
+4/3/07  After several code tuning steps:
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.111   0.125  2.82575
+Code B                 0.135   0.143  2.87041
+Code Adelt             0.114   0.143  2.90067
+Code Bdelt             0.143   0.157  2.98719
+----------            -------  -----  -------
+File name /data/mce/1173484228
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.109   0.124  2.78208
+Code B                 0.133   0.142  2.91931
+Code Adelt             0.112   0.143  2.95325
+Code Bdelt             0.143   0.153  3.10275
+----------            -------  -----  -------
+File name /data/mce/1173482145
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.310   0.358  2.02392
+Code B                 0.395   0.417  2.08606
+Code Adelt             0.325   0.402  2.14739
+Code Bdelt             0.431   0.477  2.22266
+----------            -------  -----  -------
+File name /data/mce/1172818941
+Original size 20185088
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.212   0.295  1.45422
+Code B                 0.268   0.360  1.49445
+Code Adelt             0.208   0.309  2.01130
+Code Bdelt             0.270   0.363  2.09744
+----------            -------  -----  -------
+File name hk_fake.dat
+Original size 16500000
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 1.285   1.461  1.65055
+Code B                 1.579   1.755  1.69153
+Code Adelt             1.328   1.749  1.93330
+Code Bdelt             1.635   1.872  2.00272
+----------            -------  -----  -------
+File name /data/mce/1173246883
+Original size 80740352
+
+
+4/3/07  Where do we stand?
+
+* Try trading off speed vs size with number of data sampled.
+
+* Implement a "recode" length after one "section"
+** Recode after of order 40 MB = 10,000 MCE reads.
+** Have a MAX_SECTION_LENGTH=40000000, MAX_NUM_FRAMES=65536, where 
+   section length refers to _raw_ size.
+
+* Channel data don't all need to store 20 bits for reps: use LUT
+
+* Handle FITS files
+
+* Handle HK+spec files
+
+* Speed improvements:
+** Smart way to handle branching in writebits()?   DONE
+** Set up N=32 bit channels to use the null encoder?   DONE
+** Remove tests for null bitstream   DONE
+** Remove tests in writebits/readbits for nbits==0.  DONE
+
+* Try a Huffman/literal code (as with last fall)
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.113   0.159  2.82573
+Code B                 0.134   0.177  2.87039
+Code Adelt             0.115   0.164  2.90067
+Code Bdelt             0.144   0.198  2.98719
+----------            -------  -----  -------
+File name /data/mce/1173484228
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.108   0.153  2.78207
+Code B                 0.137   0.182  2.91931
+Code Adelt             0.113   0.163  2.95325
+Code Bdelt             0.142   0.191  3.10275
+----------            -------  -----  -------
+File name /data/mce/1173482145
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.315   0.415  2.02392
+Code B                 0.391   0.548  2.08606
+Code Adelt             0.324   0.462  2.14739
+Code Bdelt             0.451   0.582  2.22266
+----------            -------  -----  -------
+File name /data/mce/1172818941
+Original size 20185088
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.218   0.290  1.45421
+Code B                 0.274   0.357  1.49445
+Code Adelt             0.212   0.315  2.01130
+Code Bdelt             0.280   0.377  2.09744
+----------            -------  -----  -------
+File name hk_fake.dat
+Original size 16500000
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 1.261   1.769  1.65054
+Code B                 1.556   2.171  1.69152
+Code Adelt             1.259   1.838  1.93917
+Code Bdelt             1.626   2.303  2.00272
+----------            -------  -----  -------
+File name /data/mce/1173246883
+Original size 80740352
+
+
+4/2/07 Current status.  These use the raw_section class to buffer the
+raw output.  Previously was only buffering the bit I/O.  Here we omit
+the compress, gzip, and bzip2 tests.  The new classes work much, much faster.
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.113   0.144  2.82573
+Code B                 0.139   0.177  2.87039
+Code Adelt             0.107   0.157  2.90067
+Code Bdelt             0.140   0.179  2.98719
+----------            -------  -----  -------
+File name /data/mce/1173484228
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.110   0.143  2.78207
+Code B                 0.134   0.175  2.91931
+Code Adelt             0.117   0.151  2.95325
+Code Bdelt             0.139   0.186  3.10275
+----------            -------  -----  -------
+File name /data/mce/1173482145
+Original size 7077888
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.318   0.422  2.02392
+Code B                 0.393   0.528  2.08606
+Code Adelt             0.323   0.455  2.14739
+Code Bdelt             0.424   0.554  2.22266
+----------            -------  -----  -------
+File name /data/mce/1172818941
+Original size 20185088
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.221   0.294  1.45422
+Code B                 0.284   0.351  1.49445
+Code Adelt             0.217   0.314  2.01130
+Code Bdelt             0.284   0.380  2.09744
+----------            -------  -----  -------
+File name hk_fake.dat
+Original size 16500000
+
+Still have something wrong with the multi=section code, and even with
+decoding the 65536-long run 1173246883.  Maybe simply needs a windup()
+call on the ibitstream?
+
+Eventually, switch back to where 65535 is MAX per section.
+
+
+3/29/07 - Ideas for what needs to be done:
+
+* Seek back to near file start to write a size
+
+* Implement a "recode" length after one "section"
+** Parameter per file tells how many frames b/f a re-do.
+** Recode after of order 40 MB = 10,000 MCE reads.
+** Have a MAX_SECTION_LENGTH=40000000, MAX_NUM_FRAMES=65536, where 
+   section length refers to _raw_ size.
+** Put the # of frames (as 16-bit #) in file header.  (For ending loop)
+** Sections are byte-aligned.
+** Sections all have file magic but not filename
+
+* Once files have "sections", read each into memory.
+** Do all sampling from memory; sampling across sections is not needed,
+   as they are treated like being statistically independent.
+** Do all encoding from memory
+
+* Channel data don't all need to store 20 bits for reps: use LUT
+
+* Handle FITS files
+
+* Handle HK+spec files
+
+* Faster sample loading:
+** sort locations?  
+** fewer chunks and fewer samples
+
+* Smart way to handle branching in writebits()?
+
+* Try a Huffman/literal code (as with last fall)
+
+3/29/07 - See python test framework run_profile.py
+
+                    Compress  Expand  Compression
+Program                time(s) time   ratio
+----------            -------  -----  -------
+Code A                 3.224   2.454  1.65064
+Code Adelt             3.322   2.461  1.93235
+Code B                 3.618   2.686  1.69176
+Code Bdelt             3.821   2.822  2.00271
+compress               9.460   3.589  1.07082
+gzip --fast            7.224   2.035  1.26037
+gzip --best           16.741   1.815  1.26644
+bzip2 --fast          30.273  13.117  1.31221
+bzip2 --best          44.368  20.147  1.37893
+----------            -------  -----  -------
+File /data/mce/1173246883
+Original size 80740352
+
+                    Compress  Expand  Compression
+Program                time(s) time   ratio
+----------            -------  -----  -------
+Code A                 0.381   0.203  2.75605
+Code Adelt             0.378   0.212  2.82086
+Code B                 0.409   0.224  2.87083
+Code Bdelt             0.507   0.233  2.98109
+compress               0.614   0.241  1.72007
+gzip --fast            0.459   0.157  1.86905
+gzip --best            1.400   0.137  1.86046
+bzip2 --fast           1.824   0.879  2.17902
+bzip2 --best           2.658   1.225  2.55498
+----------            -------  -----  -------
+File /data/mce/1173484228
+Original size 7077888
+
+
+                    Compress  Expand  Compression
+Program                time(s) time   ratio
+----------            -------  -----  -------
+Code A                 0.365   0.198  2.79755
+Code B                 0.402   0.232  2.93256
+Code Adelt             0.374   0.212  3.00216
+Code Bdelt             0.398   0.217  3.15707
+compress               0.612   0.233  1.78949
+gzip --fast            0.428   0.156  1.93402
+gzip --best            1.300   0.144  1.94271
+bzip2 --fast           1.769   0.769  2.25222
+bzip2 --best           2.575   1.200  2.61338
+----------            -------  -----  -------
+File /data/mce/1173482145
+Original size 7077888
+
+
+                    Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 1.217   0.583  2.02377
+Code B                 1.343   0.677  2.08734
+Code Adelt             1.243   0.601  2.16375
+Code Bdelt             1.357   0.689  2.22168
+compress               2.099   0.814  1.21261
+gzip --fast            1.656   0.516  1.32535
+gzip --best            4.708   0.474  1.32424
+bzip2 --fast           6.996   3.118  1.41266
+bzip2 --best          10.294   4.785  1.54670
+----------            -------  -----  -------
+File /data/mce/1172818941
+Original size 20185088
+
+                     Compress Expand  Compression
+Program                time    time    ratio
+----------            -------  -----  -------
+Code A                 0.222   0.197  1.44992
+Code B                 0.279   0.258  1.49507
+Code Adelt             0.222   0.217  1.99801
+Code Bdelt             0.292   0.285  2.08008
+compress               1.256   0.477  1.87612
+gzip --fast            0.858   0.434  2.48407
+gzip --best           10.671   0.356  2.65742
+bzip2 --fast           5.638   1.643  3.01040
+bzip2 --best          12.748   2.227  2.83077
+----------            -------  -----  -------
+File name hk_fake.dat
+Original size 16500000
+
+
+
+3/25/07
+
+Comparing results on 1173246883. Original size 80,740,352 bytes.
+Chopped calbol data.
+
+My CodeA = 78.1%    E/D in  3.3 and  2.7 sec (u+s)
+My CodeB = 63.4%    E/D in  3.9 and  3.3 sec (u+s)
+Dt CodeA = 51.8%    E/D in  3.4 and  2.6 sec
+Dt CodeB = 50.0%    E/D in  3.8 and  2.9 sec
+gzip     = 79.1%    E/D in 11.8 and  2.0 sec
+bzip2    = 73.5%    E/D in 45.7 and 20.3 sec
+
+Also shorter 8x8 run 1173484228
+
+My CodeA = 38.8%    E/D in  0.34 and  0.21 sec
+My CodeB = 36.6%    E/D in  0.37 and  0.24 sec
+Dt CodeA = 35.5%    E/D in  0.37 and  0.23 sec
+Dt CodeB = 33.6%    E/D in  0.42 and  0.24 sec
+gzip     = 53.5%    E/D in  0.46  and 0.17 sec
+bzip2 --f= 45.9%    E/D in  1.71 and  0.82 sec
+bzip2    = 39.1%    E/D in  2.6  and  1.25 sec
+
+
+
+
+3/21/07 Seem to have a bug: sampling only the first 1000 data points
+instead of evenly spaced 1000?
+
+3/21/07 Next plan is to try to add ability to encode deltas instead of values.

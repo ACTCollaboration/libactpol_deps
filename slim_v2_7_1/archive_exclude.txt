@@ -1,0 +1,6 @@
+*.tgz
+*.dSYM
+.git
+autom4te.cache
+autom4te.cache/*
+lib/lib*

@@ -1,0 +1,15 @@
+(As of September 30, 2008)
+
+Slim currently does not support 8-byte integer data.  Only 1, 2, or 4
+byte raw data can be compressed.
+
+Floating-point numbers are not really supported, though slim will do
+its best for 4-byte floats by pretending they are integers.  The
+author hopes to improve the behavior with floating-point numbers in
+the future.
+
+The library interface currently allows reading, but not writing, slim
+data.  The author would like to add a writing feature, but he is stuck
+on the issue of how to inform the object of all the facts it needs
+about the planned channels and their properties.  A possible first
+step is to allow writing of one-channel data files only.

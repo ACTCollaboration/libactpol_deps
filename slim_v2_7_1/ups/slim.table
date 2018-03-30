@@ -1,0 +1,6 @@
+envAppend(MANPATH, ${PRODUCT_DIR}/share/man)
+envAppend(LS_COLORS, *.slm=00;31)
+pathAppend(PATH, ${PRODUCT_DIR}/bin)
+pathAppend(CPATH, ${PRODUCT_DIR}/include)
+pathAppend(LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+pathAppend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)

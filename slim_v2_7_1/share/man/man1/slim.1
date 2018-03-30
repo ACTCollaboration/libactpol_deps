@@ -1,0 +1,774 @@
+.TH slim 1 "October 24, 2008" "Version 2.6"  "PHYSICS DATA COMPRESSION"
+.SH NAME
+slim, unslim, slimcat \- Reversible compression of noisy physics data.
+.SH SYNOPSIS
+.B slim
+[options] filename ...
+.br
+.B unslim
+[options] filename ...
+.br
+.B slimcat
+[options] filename ...
+
+
+
+.SH DESCRIPTION
+\fBslim\fP performs lossless compression on binary data files.  It is
+designed to operate very rapidly and achieve better compression 
+.I on noisy physics data
+than general-purpose tools such as gzip and bzip2. 
+.PP
+\fBslim\fP works well only on very specific kinds of data.  It
+requires a file that consists of integers represented in their native
+16- or 32-bit binary format and arranged in a regular repetitive
+pattern.  
+Specifically,
+.B slim
+is designed for the kind of enormous files produced copiously by
+the Atacama Cosmology Telescope.  If it works well for other types of
+files and from other experiments, then so much the better.  
+
+.B slim 
+is not now appropriate for self-describing files containing their own
+meta-data (e.g. FITS or NetCDF files).  Probably the slim library
+could be adapted to such files, if a front end were written to parse
+the meta-data to extract details about the structure of the main data.
+
+.PP
+Although \fBslim\fP can operate on any file in the sense that
+the "slimfile" will correctly expand back into the original file, good
+compression performance--indeed, any compression at all--requires that
+.B slim
+knows specific details about the file contents.  See the
+.B Data description options
+on how to describe the file contents, and 
+.B RAW DATA STRUCTURE
+for explanation of the relevant terms.
+
+.B slim
+"trains" its encoding algorithms by examining only a fraction of the
+data.  For example, the main algorithm (the 
+.B reduced binary 
+.BR encoder )
+works by compressing a small contiguous range of values at the expense
+of all values outside that range.  The ends of that range are selected
+based on only a sample of the data.  For more, see 
+.B Data sampling 
+.BR options .
+
+.PP
+.B unslim
+is a synonym for 
+.I slim  --expand
+
+.PP
+.B slimcat
+is a synonym for 
+.I slim  --stdout --preserve
+
+
+
+.SH OPTIONS
+All options have short and long forms, which are listed together here.
+
+
+
+.SS General options
+.TP
+.BR \-p ", " --preserve
+Preserve the original raw file when compressing or the original slim
+file when expanding.  The default behavior is to delete the input
+file(s) as each output file is successfully compressed or expanded
+(except when the option --stdout is used).  If this option is selected
+when expanding files, then the new output file is named by replacing
+the ".slm" extension with ".raw".
+.TP
+.BR \-X ", " --compress
+The file or files given as arguments are raw files to be compressed.
+The default is to assume raw files, except where the file names end
+with the \fI.slm\fP or \fI.SLM\fP suffix.  This option is the only way
+to force compression of a file named
+.IR something.slm .
+.TP
+.BR \-x ", " --expand
+The file or files given as arguments are slim files to be expanded.
+The default is to assume raw files, except where the file names end with
+the \fI.slm\fP or  \fI.SLM\fP suffix.
+.TP
+.BR \-k ", " --force
+Force compression or expansion to overwrite any existing file of the
+same name.  Without this option, \fBslim\fP will refuse to
+overwrite any files.
+.TP
+.BR \-V ", " --version
+Print the slim file version and exit.
+.TP
+.BR \-q ", " --quiet
+Don't print any output unless there are errors.
+.TP
+.BR \-? ", " --help
+Print a usage message and exit.
+
+
+
+.SS Compression options
+These options are ignored when expanding files.
+.TP
+.BR \-m ", " --method = \fImethod\fP
+Use encoding method \fImethod\fP (default = 2).  The methods are:
+
+    * \fB-m2\fP The reduced binary encoder (default)
+    * \fB-m5\fP Runlength coder.  Good for data where the values are
+          strictly identical for long periods.
+
+All other values are reserved.  Methods numbered 1, 3, and 4 were once
+implemented.  They all proved wrong for the job and have been removed.
+Method 1 was a slight variation on the reduced binary system,
+differing only in how the parameters were computed.  For more on
+methods 2 through 5, see
+.B ENCODING ALGORITHMS.
+.TP
+.BR \-d ", " --deltas 
+Encoders operate on the differences between successive data values
+(the deltas).  Default is to operate on the data itself.  Deltas are
+slightly slower to encode and decode, but they compress more
+effectively in almost all situations.  In principle, raw data could
+compress to 0.5 fewer bits per data value, but this would be expected
+only for extremely stable channels that are not typical of physics data.
+.TP
+.BR \-b ", " --permit-bitrotation
+Bit-rotation is an encoding feature useful in some data streams where
+the lowest \fBn\fP bits are always the same.  When using this option,
+slim will check each channel for the existence of some number of
+constant lowest bits.  If any are found, then the data are compressed
+by "rotating" the lowest bits to the top of the number and then
+proceeding with the usual methods.  The author finds this useful with
+some analog-to-digital schemes that have several low-order bits fixed
+at zero.  For more, see
+.B Bit  rotation
+below.
+.TP
+.BR \-n ", " --filename
+Save the original filename in the slim file header.  By default,
+slim does not include the filename in the slim file.
+.TP
+.BR \-S ", " --rawsize
+Save the original file's size (in bytes) in the slim file header.
+(Currently, this is on by default and cannot be turned off.)  Note
+that when expanding, the raw file size is 
+.I not
+tested against the size stored in the file header.
+.TP
+.BR \-C ", " --compute-crc32
+On compression, compute a CRC-32 checksum on the raw data in each
+section and include its value in the slim file.  Default is not to
+compute the CRC.  (On expansion, slim will compute and test the
+checksum if it is present in the slim file, with or without this
+option set.  However, also see 
+.BR --ignore-crc32
+)
+
+.SS Expansion options
+These options are ignored when compressing files.
+.TP
+.BR \-o ", " --stdout
+Write the results of expansion to stdout instead of to a file or
+files.  This option implies "--preserve" and is equivalent to running
+.BR slimcat
+.TP
+.BR \-0 ", " --ignore-crc32
+On expansion, do not compute and test the CRC-32 checksum, even if one
+is included in the slim file.
+
+
+
+.SS Data description options
+The current version of
+.BR slim
+requires that all data channels be the same (i.e. of the same raw
+type, having the same number of repeats per frame, and so
+forth). Therefore, when given, all of the options in this section
+apply to all channels.  These requirements are not limitations
+inherent to the slim file specification, but only to the current
+implementation of
+.BR slim .
+In the future, it could be possible to slim a more heterogeneous mix
+of data channels, if a configuration file parser were to be added.  For
+more on the differences between the current restrictions on
+compression and the full generality of the expander, see
+.B More general slim data 
+.BR structures .
+
+Data types are assumed to be 1-, 2- or 4-byte integers with little-endian
+byte order.  (Single-byte integer types cannot currently be specified
+at the command line.)  There are no immediate plans to add facilities for
+handling 8-byte integers or floating-point numbers to
+.B slim
+(although command-line arguments have been reserved for the floating-points).
+
+See 
+.B RAW DATA STRUCTURE
+for more information about how the raw data is assumed to be
+structured, and for the definitions of the terms
+.IR channels ,
+.IR sections ,
+.IR frames ,
+and 
+.IR repeats .
+
+All data description options apply to compression only; they are all
+ignored when expanding a slim file.
+
+.TP
+.BR \-c ", " --num-chan = \fInc\fP
+The data consist of \fInc\fP separate data channels.
+.TP
+.BR \-r ", " --repeats = \fIreps\fP
+One frame contains \fIreps\fP consecutive repeated data values for each
+channel.
+.TP
+.BR \-F ", " --frames = \fInf\fP
+There are \fInf\fP frames in each data section.  Note that
+.B slim
+is allowed to break up these frames into multiple sections as needed
+to keep the section size below the hard limit of 16 MB, or for any
+other reason.  However,
+.B slim
+will also enforce a change to a new section at the end of every
+.I nf
+frames with this option.
+
+.TP
+.BR \-i ", " --int
+.PD 0
+.TP
+.BR \-u ", " --unsigned
+.PD
+All data are signed or unsigned 32-bit integers (the default is signed
+32-bit).
+
+.TP
+.BR \-s ", " --short
+.PD 0
+.TP
+.BR \-v ", " --ushort
+.PD
+All data are signed or unsigned 16-bit integers.  Some aspects of
+.B slim
+are not implemented for short integers, such as bit rotation.  See
+.BR BUGS .
+
+.TP
+.BR \-y ", " --char
+.PD
+All data are signed 8-bit integers.
+
+
+.TP
+.BR \-f ", " --float
+.PD 0
+.TP
+.BR \-g ", " --double
+.PD
+All data are 32-bit or 64-bit floating point numbers using the
+IEEE-754 standard.  Currently no floating-point compression schemes
+are implemented, and this option is merely reserved for future use.
+Instead, 32-bit floating point data are treated as signed 32-bit
+integers, while 64-bit data are stored without compression.
+
+
+.SS Data sampling options
+The main encoder system (the reduced binary method) works by sampling
+only some fraction of the raw data and assuming that the statistical
+properties of the sample are adequate to predict the behavior of the
+entire set.  The data sampling options govern what fraction of the
+data are used in the sampling.  These control the trade-off between
+speed and compression ratio.
+
+Experience suggests that sampling a greater fraction of the data
+offers very little benefit; we suggest sampling no more than 10% of
+all values (the default), unless you plan to do (or have done) a
+careful test of speed and compression ratio.
+
+Note that the encoders are all universal, in the sense that all
+possible values can be encoded (though of course most values will not
+be compressed to a smaller size).  This means that the occasional
+unusual data value can be encoded, and sparse sampling is not fatal to
+the resulting slim file.
+
+Sampling can be done on a maximum of 20,000 data values.  All sample
+options refer to percentages of either this maximum or the full number
+of available values, whichever is smaller.  Regardless of the options
+given, a minimum of 20 data values or all values will be sampled,
+whichever is smaller.
+.TP
+.BR -G ", " --sample-pct=\fIpct\fP
+Sample \fIpct\fP percent of the data (between 2 and 100%) up to a
+maximum of 200*\fIpct\fP samples when determining the encoding
+parameters.  Default is 10% up to 2000 samples.
+.TP
+.BR \-9 ", " --18-pct ", " --best
+Sample 18% of the data (up to 3600 samples) to determine encoding parameters.
+.TP
+.BR \-8 ", " --16-pct
+Sample 16% of the data (up to 3200 samples) to determine encoding parameters.
+.TP
+.BR \-7 ", " --14-pct
+Sample 14% of the data (up to 2800 samples) to determine encoding parameters.
+.TP
+.BR \-6 ", " --12-pct
+Sample 12% of the data (up to 2400 samples) to determine encoding parameters.
+.TP
+.BR \-5 ", " --10-pct
+Sample 10% of the data (up to 2000 samples) to determine encoding
+parameters.  (This is the default.)
+.TP
+.BR \-4 ", " --8-pct
+Sample 8% of the data (up to 1600 samples) to determine encoding parameters.
+.TP
+.BR \-3 ", " --6-pct
+Sample 6% of the data (up to 1200 samples) to determine encoding parameters.
+.TP
+.BR \-2 ", " --4-pct
+Sample 4% of the data (up to 800 samples) to determine encoding parameters.
+.TP
+.BR \-1 ", " --2-pct ", " --fast
+Sample 2% of the data (up to 400 samples) to determine encoding
+parameters.
+
+
+
+.SS Debugging and unimplemented features
+.TP
+.BR \-B ", " --debug-buffer = \fIbufsize\fP
+read or write raw data from a debugging buffer of size \fIbufsize\fP
+bytes.  This is not the optimal way to compress or expand files
+(though the price is small).  This option is only intended to exercise
+and debug parts of the code that would be used in a planned slimlib
+library of functions.
+
+
+
+
+.SH RAW DATA STRUCTURE
+The fundamental concept in slimming a raw data file is that of the
+.B data channel.
+One channel would normally correspond to one physical data source,
+such a single thermometer or encoder or other sensor.  Good
+compression requires that the distribution of the data from a single
+channel has a single mode, that its statistical properties of be more
+or less stationary,that the rate of extreme outliers be small (less
+than a few percent), and so forth.
+
+Data from more than one channel can be mixed together in the raw file,
+provided that the pattern of changes from one channel to another is
+repeated consistently.  The most general pattern permitted is to have
+.I M
+samples of channel 1, followed by
+.I N
+samples of channel 2, and so forth until all of the channels in the
+raw data file have appeared.  This unit of the raw file,
+with each channel occurring one time and giving its expect number of
+samples, is called the 
+.BR frame .
+
+Multiple frames make up a
+.BR section .
+The raw data file is assumed to consist of one or more sections
+concatenated together.  The number, type, repetition count, and order
+of the channels is fixed throughout a single section (and in the
+current version of the
+.B slim
+executable, there is no way to change these factors between sections,
+either).  A section consists of one or more frames, and it is valid
+for the last section in a file to end with a fractional frame (this
+would, we assume, be due to an unexpected event, such as a raw data
+file being truncated during acquisition or transmission).
+
+When a raw file contains only one channel, there is an ambiguity
+in whether that channel is being repeated 
+.I N 
+times within a single frame, or if it is repeated only once in each of
+.I N
+frames.  Because the first choice leads to faster execution,
+.B slim
+silently selects it even if the user's command-line options call for
+the second.  Thus the options "--num-chan=1 --repeats=1 --frames=20000"
+are silently converted to  "--num-chan=1 --repeats=20000 --frames=1".
+
+Note that if one or both of the options giving the
+.I repeats
+or the 
+.I frames
+are absent, then 
+.B slim
+tries to do the smartest possible thing.  You probably don't want to
+let it do that, but you can.
+
+
+
+
+.SS More general slim data structures
+The
+.B slim
+executable produces slim files with several restrictions that are
+.I not
+inherent to the definition of the slim file format itself.  The
+expander can expand files meeting the more general specification,
+but there is no way at this time to construct these more general
+files.  
+
+Here we list some ways that the structure could be less restrictive
+than the current compression executable permits.  For one thing, the
+data type of different channels need not be the same, and the number
+of repeats can also be different.  The list of channels could change
+between one section and the next.  Also, the slim file specification
+allows all sections--not only the last--to be of arbitrary
+size. However, the current implementation of the
+.B slim
+executable does not offer a way to break up the raw data into sections
+at arbitrary places in the raw file.
+
+Currently, 
+.B slim
+enforces a limit that sections be no longer than 16 MB (2^24 bytes),
+because of the implementation detail that sections must be held in
+memory when compressing or expanding them.  If data comprising what
+is conceptually one section exceed this limit, then
+.B slim
+silently divides it into two or more sections of nearly equal length
+and writes them one after another.  This fact is not generally
+relevant to the user, but it does mean that compression will not be
+very effective if there are channels that repeat only a few times per
+16 MB of raw data.
+
+
+
+
+.SH ENCODING ALGORITHMS
+.B slim
+uses a few different algorithms for converting raw data into generally
+smaller data.  By "generally", we mean that no system can convert all
+possible 32-bit values into smaller ones; this is shown by a simple
+counting argument.  The goal of 
+.B slim
+is to recognize a small subset of values that appear most often and to
+map only this subset into codes that require fewer bits.  All other
+data values outside the small subset are expanded into more than their
+original number of bits.  If most or all raw values come from the
+compressible subset, then the encoded data will be smaller than the
+raw data.
+
+Note that all encoding methods currently used in
+.B slim
+convert a single value into an exact integer number of bits (unlike
+range or arithmetic coding).  Thus each bit in a slim file is a part
+of (or all of) the code for a single value in the raw file (unless, of
+course, it belongs to the file's header data).
+
+The three encoding methods currently implemented are:
+.TP 
+.B Constant-value encoding
+A channel that contains exactly the same value for every instance will
+be encoded as a 
+.BR constant-value .
+This system compresses each value to zero bits, apart from recording
+the constant value in the section header.  No command-line option is
+required for constant-value encoding: all channels will be checked to
+see if their values are strictly constant, and if so, they will be
+encoded by this method in preference over all others.
+
+.TP
+.B Run-length encoding
+For a channel whose values are strictly constant for long runs but not
+for an entire data section,
+.B run-length encoding
+is ideal.  For example, it works well on a channel storing the integer
+part of the time (in seconds), if the time is sampled many times
+per second.  This method will store a repeated run of a single value
+as a (value, count) pair.
+
+Two cautions are: (1) if the data sample used for evaluation shows
+that run-length encoding will not actually compress the data channel,
+then that channel will silently switch over to the standard
+reduced-binary encoding, and (2) the longest possible run is the
+number of repetitions within a frame--for technical reasons, a "run"
+cannot cross from one frame to another.  If a channel's values do not
+appear as several successive words in the raw file, then run-length
+encoding is not a good choice.
+
+.TP
+.B Reduced-binary encoding
+This is the default method.  The reduced-binary encoder has two
+parameters: the number of bits 
+.I N
+used for storing the "normal" data, and the offset 
+.I s
+subtracted from each value before encoding.  The idea is to choose the
+parameters so that most or all values lie in the range [
+.IR s ", " s+(2^N)-2
+] and can therefore be stored using only
+.I N
+bits.  The value 
+.I s+(2^N)-1
+is reserved to indicate "Overflow", that the value being
+encoded did not lie in the normal range.  Overflow codes are
+followed by the raw data value itself, stored in its natural length of
+32 or 16 bits.  Thus, most 32-bit data are stored as 
+.IR N -bit
+numbers, while a small fraction require
+.I N+32
+bits.
+
+The parameters are chosen using the data sample set.  All possible
+values are tested for 
+.IR N ,
+while 
+.I s
+is varied to keep the arithmetic mean of the sample data in the middle
+of the normal range for the given value of 
+.IR N .
+The choice of 
+.I N
+is that which gives the best compression on the sample data set.  Note
+that keeping the mean in the middle of the range might not always be
+appropriate for every possible distribution, but that's how it is done.
+
+
+
+.SS Tested but rejected encoding algorithms
+Three other algorithms were implemented into
+.B slim
+and later removed.  Each of them improves on the compression ratios of
+the reduced-binary code, but the improvements are small and come at a
+price in compression and expansion speed (not to mention program
+complexity).  Development on these algorithms was dropped for this
+reason, and we mention them in case you are also pondering ideas for
+improved encoding algorithms in
+.BR slim .
+
+.TP
+.B Codes A and B
+Codes A and B are minor variations on the reduced-binary code.  The
+former changes how the presence of overflows is signaled, and the latter
+also changes how their overflowing values are stored.
+
+Code
+A arises from the observation that overflow values might be rare, but
+they are still more common than any other single value.  The idea is
+to encode most normal values as an 
+.IR N -bit
+number but the overflow as an
+.IR m -bit 
+number, where 
+.IR m < N .
+The result is to make each overflow take up
+(N-m) fewer bits, while the allowed range of values contains only
+2^(N)-2^(N-m) values, slightly fewer than it would have had
+otherwise.  This results in savings of approximately 0.15 to 0.20 bits
+per channel for normally-distributed data.  However, the method was
+removed from
+.B slim 
+because of its CPU cost: decoding each normal value
+requires first reading 
+.I m
+bits, testing whether they are the overflow code, and (if not) then
+reading in an additional
+.I (N-m)
+bits to find the full 
+.IR N -bit
+number.
+
+Code B expands on Code A.  It starts with the observation that
+overflow values are not generally taken randomly from the full range
+of possible values, but instead are most likely found near the allowed
+range of non-overflowing values.  It is therefore beneficial to write
+the overflowed value not as a full 32-bit number (assuming the raw
+data are 32-bit numbers), but instead as an N-bit, or (N+1)-bit
+number.  Thus, overflows are encoded as in Code A, followed by a
+(prefix, value), where the prefix is an exponential Golomb code for
+the value's size (actually, the size with N subtracted, since the size
+of an overflowing value is guaranteed to be no less than N).  As with
+Code A, it improves compression by some fraction of one bit per value,
+but the savings were judged not to be worth the performance penalty.
+
+.TP
+.B Huffman coding
+Huffman coding of the raw data clearly accomplished the best
+compression ratios of all methods.  However, it was also the slowest
+and so was removed from the program.  
+
+The approach is to take the data
+and split it into "upper" and "lower" bits.  The upper bits are
+Huffman-coded, while the lower bits are assumed to be
+uniformly-distributed random values and are repeated verbatim into the
+compressed data stream.  The split into upper and lower is made such
+that the data sample contains no more than 127 distinct values for the
+upper bits.  The Huffman tree is built on the sampled frequencies of
+the values of the upper bits (with an extra symbol to signal
+overflows).  The choice of 127 symbols was motivated by the
+possibility of storing the code tree with N symbols in only (N+1) bytes,
+and by the observation that even as few as 32 symbols work just as
+well on truly Gaussian-distributed data.  
+
+The price of decoding Huffman-encoded symbols is steep: we found that
+decoding took twice as long when the Huffman encoders were used.  The
+problem is that the prefix-free Huffman codes must be read one bit at
+a time, for there is no way to know their length in advance.
+
+
+
+.SS Bit rotation
+Bit-rotation is an advanced feature that helps in compressing channels
+where the lowest
+.I B 
+bits are constant.  This sort of channel violates the usual
+assumption that data follow a smooth distribution function, and that
+the lowest few bits are likely to be distributed almost uniformly.
+The author of 
+.B slim
+has certainly found channels in real experiments where (for example)
+the six least significant bits are always zero.  This might happen a
+case where an IEEE 754 floating-point number with 24 bits in its
+sign-plus-mantissa was converted to and recorded as an integer.
+
+If such a channel were encoded by the reduced-binary encoder, then the
+unchanging
+.I B
+lowest bits would be faithfully but wastefully reproduced over and
+over again.  Bit rotation offers a way around this redundancy.
+
+Bit rotation has
+.B slim
+encode such a channel by bit-shifting the raw value by 
+.I B
+bits to the right and then copying what were the 
+.I B
+lowest bits to the top (most significant bits) of the shifted result.
+This makes, for example, the value 0xbeef9900 into 0x00beef99 for the
+case of 
+.IR B =8.
+The reduced binary encoder can then act on the bit-rotated result, in
+which the lowest bits of the new value are presumably less repetitive
+than they were before bit rotation was applied.
+
+The user selects only whether to try bit rotation with the
+.B --permit-bitrotation
+option.  The program then decides whether to choose a non-zero value
+of
+.I B
+based on the sampled data set.  The choice will be the number of
+lowest-order bits that are strictly constant throughout the sample
+set.
+
+The penalty for trying bit rotation on every channel is modest when
+compressing--causing roughly a 1.5% increase in instructions executed,
+in one test.  There is of course no penalty in expanding unless bit
+rotation was actually used.
+
+
+
+.SH 32- VERSUS 64-BIT ARCHITECTURES AND ENDIANNESS
+In order to operate on machines with 32-bit and 64-bit processors,
+.B slim
+uses strictly sized data types where it matters, such as
+.I int32_t
+for signed 32-bit integers.  There are no known problems in running it
+on machines with 32-bit or 64-bit word sizes.  The low-level bit
+operations are performed on words with the same size as the C++ data
+type
+.I long
+which would normally be the native word size of the build machine.
+The code works either way, but it is likely most efficient to operate
+on words of the native size.  The author admits to not having verified
+this hunch empirically.  (You can override this choice and force 32 or
+64 bit word sizes.  You do this when running build_bit_constants
+during the build process, but you probably don't want to unless
+cross-compiling.)
+
+Because of the author's prejudice or narrow experience (or the demands
+of his day job), the assumption that words are in little-endian order
+is deeply embedded in
+.BR slim .
+An ambitious future contributor is welcome to remove this restriction,
+but it is hard to see how to handle byte-swapping without a
+performance penalty.  For now, 
+.B slim
+fails an assertion if run on a big-endian machine.
+
+
+
+.SH ENVIRONMENT
+It would be very reasonable to have 
+.B slim
+use environment variables for some things.  Feel free to suggest such
+features; there are none at this time.
+
+
+
+.SH EXAMPLES
+First, compress data from a Multi-channel electronics system.  The raw files
+consist of frames 4400 bytes long having 1100 4-byte words.  We ignore
+that a few of the channels are unsigned and treat them all as signed
+words.  Each channel repeats only once in the frame.  We want to
+encode the differences between successive data values and use method 2
+(the reduced binary encoder).
+
+        slim -c1100 -i -r1 -dm2 raw_mce_file.dat
+
+Next, a file containing only many, many repetitions of a single
+channel:
+
+        slim -c1 -i -dm2 one_channel_only.dat
+
+To uncompress both files:
+
+        unslim raw_mce_file.dat.slm one_channel_only.dat.slm
+
+
+
+.SH SEE ALSO
+slim_acthk(1), gzip(1), bzip2(1)
+
+
+
+.SH BUGS AND UNIMPLEMENTED FEATURES
+.PP
+The 
+.IR -f 
+and
+.IR -g
+command-line options for floating-point data are reserved but aren't
+implemented.
+.PP
+Bit rotation does not work when the data are 8 or 16-bit integers
+(whether signed or unsigned).
+
+
+
+.SH COPYRIGHT NOTICE
+Copyright \(co 2008 Joseph Fowler, Princeton University.
+.PP
+This work was supported by and done for the benefit of the Atacama
+Cosmology Telescope collaboration.
+.PP
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+.ig
+Permission is granted to process this file through troff and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+..
+.PP
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the Free Software Foundation.

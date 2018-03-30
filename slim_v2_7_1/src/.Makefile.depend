@@ -1,0 +1,16 @@
+bit_constants.o: bit_constants.cpp bit_constants.h
+bitstream.o: bitstream.cpp bitstream.h bit_constants.h
+raw_section.o: raw_section.cpp crc.h
+slim_channel.o: slim_channel.cpp bitstream.h bit_constants.h
+slim_codec_constant.o: slim_codec_constant.cpp slim_single_codec.h \
+  bitstream.h bit_constants.h
+slim_codec_default.o: slim_codec_default.cpp bitstream.h bit_constants.h
+slim_codec_factory.o: slim_codec_factory.cpp
+slim_codec_runlength.o: slim_codec_runlength.cpp slim_single_codec.h \
+  bitstream.h bit_constants.h
+slim_codec_reduced_binary.o: slim_codec_reduced_binary.cpp bitstream.h \
+  bit_constants.h
+slim_control.o: slim_control.cpp
+slim_exceptions.o: slim_exceptions.cpp
+slim_file.o: slim_file.cpp bitstream.h bit_constants.h
+slimlib.o: slimlib.cpp

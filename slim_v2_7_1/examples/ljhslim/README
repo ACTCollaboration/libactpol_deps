@@ -1,0 +1,42 @@
+ljhslim - a program to compress ljh files (LLNL and NIST file format
+          for recording microcalorimeter pulses) using the slim
+          algorithm.  See http://slimdata.sourceforge.net/ for slim.
+
+Joe Fowler, NIST
+
+November 15-17, 2010
+
+-------------------------------------------------------------------
+
+This program uses the library slim, built for compression of data from
+the Atacama Cosmology Telescope (ACT).  While the slim file format is
+general enough to accomodate LJH files, the standalone slim program is
+not flexible enough to generate them.  
+
+The program "ljhslim" provides a front-end for the slim library
+capable of recognizing the extent of the ASCII header in an LJH file
+and of parsing the header to determine the pulse record length.
+
+The slim strategy is designed to be very fast in compression or
+inflation while taking advantage of the redundancies in typical
+physics data.  The compression uses a few strategies:
+
+* Slim encodes not the raw numbers, but the differences between
+  successive values.  Unless a data stream is unusually stable, there
+  will be more entropy in the values than in successive differences.
+
+* Slim uses the concept of data "channels", which can differ in their
+  properties such as means, spread, signedness, and word size.  Data
+  from consecutive channels are written consecutively in an integer
+  number of bits, without mixing bits between channels.
+
+* Slim computes the optimal number of bits to use for each channel
+  from the principle that overflows of this range should not exceed
+  more than about 3% of all samples.  (Because of how slim handles
+  overflows, this principle minimizes the overall compressed size.)
+  This optimization is made faster by sampling only a fraction (usually
+  10%) of the data.
+
+This program was written mainly in November 2010 and added to the slim
+package as the one and only example of a file-format-specific front
+end for slimlib in September 2013.

@@ -1,0 +1,256 @@
+v2_7_1   2017/09/01 JWF
+Thanks to Matthew Hasselfield of Penn State for a patch that allows
+storing of 8-bit integers.
+
+v2_7_0   2016/09/16 JWF
+Thanks to Matthew Petroff of Johns Hopkins for several patches.
+This version now accepts files with LZ4 compression for input.
+
+v2_6_7   2013/12/17 JWF
+Fixed string handling bug wherein "unslim --preserve XX.slm Y.slm" would
+produce XX.raw and Y.raww with extra 'w'. Fixed bug in bitstream reader
+when required bits end exactly on a 64-bit boundary. (Thanks Matthew H.)
+Added examples/ directory with the ljhslim program for LJH (x-ray pulse
+record data) files, a good example of using the slim library for your own
+favorite file type.
+
+
+v2_6_6   2013/09/20 JWF
+Fixed missing include file that prevented build on OS X 10.8 with macports.
+(Thanks to Rolando Dunner-Planella for debugging this.)  Fixed "make test"
+target so it links against local build, not installed library.  Fixed build
+bugs when "make clean && make DEBUG=1" was tried.  Added error messages
+when command-line errors can't be parsed.  Tests work now on Darwin (OS X).
+
+v2_6_5   2011/11/28 JWF
+Added patch from Mike Nolta to enable reading from "zirfiles" (=zipped 
+dirfiles).  Added patch from Don Wiebe to enable slimdopen() in 
+slimlib (create a SLIMFILE from a file descriptor).  Added testing
+for these.
+
+v2_6_4   2010/11/16 JWF
+Added src/Makefile.in test to use appropriate linker options for
+embedding the soname into the object file, which differ on Darwin
+versus Linux.  Made two new slim_compressor_t public methods,
+get_input_file_stats and reset_channels (and also made a third,
+write_file_header, public instead of protected).  The purpose of these
+changes is to make it easier for code to use the slim C++ objects in
+writing files that consist of different sections (different lists of
+channels, for example).  I have long planned to make this possible but
+never needed the feature until now.  Fixed a bug in
+raw_section::use_external_buffer() that arises when the internal
+and external buffers are of a different size.
+
+v2_6_3   2009/03/17 JWF
+Started using standard names and links for shared object file, and
+used link option to embed soname into the object file.  Carefully
+specifying GPLv3 in all source files.  Replaced crc.h with a newer
+one from gzip that is less ambiguous about licensing (it's GPLv3).
+Fixed a bug that inadvertently changed use of deltas when runlength
+code was swapped into a reduced binary code.  Added tests to unittest
+to confirm its fixedness.
+
+v2_6_2   2009/01/06 JWF
+Fixed some build problems: including autoconf to use std env variable
+DESTDIR, make archive target.  Changed slim_dump to report on info
+about a section even if it fails the CRC-32 check.  Changed slimread()
+library function to return 0 words read rather than crashing when slim
+can't read (e.g. for CRC-32 failures).  Moved man pages to
+share/man/man1 from man/man1.  Fixed bug in slim_control.cpp that
+failed to break up large 1-channel files into multiple sections (thus
+large files wouldn't fit into memory).  Fixed a bug introduced in prev
+version when I removed signed exp-Golomb coding that prevented us
+reading runlength coded files.
+
+v2_6_1   2008/10/24 JWF
+Fixed bug in slim_file.cpp that would fail to notice EOF if the EOF
+tag ended on a machine word boundary, by silently catching the exception.
+Catching the exception is fine, but must also set eof_tag_found=true.
+Changed to use some symbolic constants in place of numbers for size of
+word giving bit rotation, algorithm code, and data type code.  Removed
+unused code for signed exponential-Golomb coding.
+
+v2_6_0   2008/09/29 JWF
+Moved from plain makefiles to an autoconf build system (without
+automake).  Moved repository to subversion.  Separated project slim
+from some ACT-specific needs (which are now in slim_act).  Removed the
+need for slim.h to include bitstream.h, hiding the latter from client
+code.  Moved CRC-32 code inline into raw_section::crc() and removed
+old crc.cpp.  Removed the EUPS-related commands from the Makefiles and
+moved into ups/eups_handle bash script.  Added GNU standard files
+AUTHORS, INSTALL, TODO, COPYING and README.
+
+v2_5_3   2008/09/13 JWF
+Made thread-safe by eliminating a few static variables in library.
+Moved crc calculation into the raw_section object with a ::crc() method
+that does not preserve state (operates on the whole buffer at once).
+Now handle trailing bytes of an ibitstream as object attributes instead 
+of static variables.  Fixed up the test_slim.py tester.  Added binary
+generate_random_data to create data for testing.
+
+v2_5_2   2008/06/25 JWF
+Throw object containing explanatory message or message with errno when
+bitstream constructor cannot open an input or output bitstream file.
+(Old behavior was to construct and require caller to check.)  Do this
+in a way so that it is still possible to slim other arguments in cmd-line.
+Improved slim_dirfile to compute md5sum on the slimmed files.
+Fixed Makefile to run ldconfig on initial install.
+
+v2_5_1   2008/05/14 jwf
+Added slimrawsize() function to the C-callable list in slimlib.cpp 
+Added slim/lib directory.  Build libraries there.  Changed to use of 
+libslim.so shared library instead of static archives.  Moved public
+include files slim.h and slimlib.h to slim/include directory.  Improved 
+slim_dirfile: will now choose compression 5 (runlength) for some 
+channel names.
+
+v2_5_0   2008/05/14 jwf
+Added ability to build a 32-bit or 64-bit native wordsize in the bitstream 
+system.  Added man page for slim_dirfile.
+
+v2_4_3   2008/02/20 jwf
+Added man pages for slimcat, unslim, slim_acthk.
+
+v2_4_2   2008/02/18 jwf
+Generalized system to work for 8-bit character words, in addition to
+16 and 32-bit words.  (Some encoders, e.g. runlength, still only work for
+32 bit words).
+
+v2_4_1   2008/02/18 jwf
+Fixed bug in which bit rotation interacts badly with constant
+channels.  Fix is to force bit_rotation = 0 for constant chans.
+
+v2_4_0   2008/02/15 jwf
+Added slim_acthk binary and classes act_spec_t and slim_control_acthk.
+Made slim_control a base class for the _acthk derived version, so some
+methods in the base become virtual.  Some static functions -> class methods.
+Added new binary slim_acthk modeled on slim but reading an ACT HK spec file
+to decide all the important channel data (size, signedness, repetitions).
+
+v2_3_7   2008/02/14 jwf
+Fixed crashes that would happen when input file size was zero.
+
+v2_3_6   2008/02/12 jwf
+Changed over from cstdio (printf) to iostream operations for I/O.
+
+v2_3_5   2008/02/07 jwf
+Fixed some confusion in the main and the src Makefiles.
+Changed crc.c to crc.cpp (internally no change).
+Moved definition of struct slimlib_file_t (and its typedef SLIMFILE)
+from the header to the source file, making it an opaque type.
+
+v2_3_4   2008/02/05 jwf
+Added a Python script version.py to print CVS tag to stdout.
+Added make targets install, declare, current for eups use.
+
+v2_3_3   2008/02/04 jwf
+Implement slimcat and unslim as hard links to the main binary by testing
+on argv[0] (which is what zcat and gunzip do), rather than the old method
+of wrapping slim with bash scripts by those names.
+
+v2_3_2   2008/02/04 jwf
+Added -o = --stdout option.  Fixed a few bugs.
+
+v2_3_1   2008/01/25 jwf
+Changed --include-crc32 option to --compute-crc32; added --ignore-crc32.
+
+v2_3_0   2008/01/24 jwf
+Completely reorganized source from a flat model into subdirectories,
+including src, doc, man, test, and bin.  Added ups table for EUPS.
+
+v2_2_3   2008/01/24 jwf
+Prevented runt short sections, which slowed things down considerably.
+Changed to use of build_bit_constants_h.cpp to auto-generate the very
+mechanical include file bit_constants.h (should help make bitstream
+better at 64-bit machines in the future).
+
+v2_2_2   2008/01/23 jwf
+Extensive optimizing of compression and expansion, both for MCE and 
+dirfile styles of input.  Complete man page.
+Fixed many bugs in handling of 16-bit data and in very small sections.
+
+v2_2_1   2008/01/16 jwf
+Fixed bug in raw_section resizing without preserving buffer.
+Inlined slim_channel::get_raw_size() to optimize expander.
+Improved test_slim.py framework.  Added profile.sh profile runner.
+
+v2_2_0   2008/01/15 jwf
+Completely reworked handling of partial words at the end of a file.  
+Instead of tagging them on after the section footer, we encode them as 
+if just one more complete word, and we make the section header (which
+contains the section size) on expansion tell the user that the decoded
+section is shorter than it really was.
+Renamed some class methods to be clearer about their purpose.
+Fixed bug in channel linked list for case of 1 channel.
+
+v2_1_6   2008/01/14 jwf
+Made compression work with trailing partial frame by changing compute 
+parameters to depend on number of bytes, not frames.
+Fixed command-line handling of various combinations of specifying 
+repeats and number of frames, or not.  Now for Nr>1 assumes Nf=1,
+and for Nr=1 assumes Nf is enough to hold entire file.  Also made sure
+section is never asked to exceed its maximum length.
+Changed 25 assertions to if (!) throw "message" for data problems.
+
+v2_1_5   2008/01/11 jwf
+13% speedup by making decoder channels into a circular linked list.
+(This is not yet used in speeding up the encoding, though.)
+
+v2_1_4   2008/01/11 jwf
+Fixed v2_1_3 bugs and even works nearly as fast as before fix.
+
+v2_1_3   2008/01/10 jwf
+Some optimizations from a switch/case to a pair of if () statements in
+slim_channel_decode::decode_frame_singlevalue() saves 2 CPU per datum.
+ALSO INTRODUCED A BUG THAT MADE DECODING NOT WORK!
+
+v2_1_2   2008/01/10 jwf
+Introduced encoder/decoder of type CONSTANT for handling data that
+is strictly constant within a section.  Saves ~0.4% size on MCE files,
+and ~1% CPU time on processing them.
+Changed types in raw_section::uval, ::ival, and ::sval to be fixed-
+size types such as int32_t, just to be safe.
+Improved some slim_dump messages.
+
+v2_1_1   2008/01/09 jwf
+Fixed two simple but fatal flaws in the implementation of the CRC checksum
+
+v2_1_0   2008/01/08 jwf
+Slim files now obey specification that sections start on a byte boundary.
+In addition to full file compression/expansion, there are calls that work:
+slim_compressor_t::write() and slim_expander_t::read() for handling arbi-
+trarily sized chunks of data.
+New -B (debug-buffer-size) flag allows testing of stream read and writes.
+
+
+v2_0_6   2008/01/01 jwf
+Removed the slimfile class in favor of adding features to the slim_expander_t
+class (user message and file mtime fixing now called from its method
+::decode_to_file(), formerly known as ::decode_file2file()).  Plan to do same
+in changing the fatfile --> slim_compressor_t class.
+
+v2_0_5   2008/01/01 jwf
+Started work on slim_compressor_t class, but it is not yet used.  About to
+change course and wanted to save the work.
+
+v2_0_4   2007/12/27 jwf
+slim_expander_t internally uses ::read_onesection method to handle reading and
+decoding one section at a time, even if user grabs arbitrary sized chunks using
+::read() method.
+
+v2_0_3   2007/12/27 jwf
+Removed use of a raw_section in the slim_expander_t class.  Will immediately
+un-do this change!
+
+v2_0_2   2007/12/27 jwf
+Now slim_expander_t uses the new ::read method even for decode_file2file calls.
+
+v2_0_1a  2007/12/06 jwf
+???
+
+v2_0_1   2007/12/06 jwf
+New file format records # of bytes in a section, not # of frames,
+which now allows for sections to be of arbitrary byte length.
+
+v2_0_0   2007/08/20 jwf
+Working version for testing.

@@ -1,0 +1,65 @@
+
+Basic Installation
+==================
+
+   These are generic installation instructions.
+
+   The `configure' shell script attempts to guess correct values for
+various system-dependent variables used during compilation.  It uses
+those values to create a `Makefile' in each directory of the package.
+It may also create one or more `.h' files containing system-dependent
+definitions.  Finally, it creates a shell script `config.status' that
+you can run in the future to recreate the current configuration, a file
+`config.cache' that saves the results of its tests to speed up
+reconfiguring, and a file `config.log' containing compiler output
+(useful mainly for debugging `configure').
+
+** For most users **
+
+[If you are using EUPS, installation instructions follow at
+"Installation for EUPS users".]
+
+The simplest way to install the slim binaries and the slim library is:
+
+./configure
+make
+sudo make install
+
+
+One can use the usual argument "--prefix=/usr/unusual/place" as an
+argument to configure.  This sets the root of the target installation
+directories.  That is, binaries go into /usr/unusual/place/bin and
+similarly for libraries into lib, manpages into man, and header files
+into include.
+
+
+
+
+Installation for EUPS users
+===========================
+
+If you are using EUPS, you build the normal way but install
+differently.  EUPS is the extended Unix product system, a version
+management system that allows multiple named versions to be available
+simultaneously to multiple users.  There is a special EUPS-aware
+makefile named ups/Makefile.  You want to use that for installation.
+
+Build the system as usual:
+
+./configure
+make
+
+But then use the eups-aware ups/Makefile to install and declare the
+version you just built.
+
+cd ups
+make install version=v2_6_0   # (or your desired tag name)
+make declare 
+
+In place of "make declare", you can "make current" (which implies
+"declare") instead.  The declare target registers and installed system
+with EUPS; the "current" target also moves the "current version"
+pointer to point at the version that you just installed.
+
+It is perfectly fine to come back later and "make current" once the
+latest version has been verified/tested in some way.

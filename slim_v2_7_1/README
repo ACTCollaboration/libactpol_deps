@@ -1,0 +1,22 @@
+This application is used to make reversible, lossless compression of
+noisy science data.  
+
+It is appropriate to use the binaries slim, unslim, and slimcat for
+data streams consisting of one or more "channels" of binary integer
+data packed into a repeating pattern of words 1, 2, or 4 bytes in
+length.
+
+In addition to the binaries, the package provides a library with C
+linkage for READING slim files with an interface that tracks the usual
+stdio binary interface as much as possible.  Thus
+slimopen("file.slm","r") returns a SLIMFILE* object.  Other methods
+include slimread(), slimclose(), slimseek(), slimtell().  Use the
+library by linking with "-lslim" and also #include <slimlib.h>.
+
+Slim currently does not support 8-byte integers.  Floating-point
+numbers are not really supported, though slim will do its best by
+pretending they are integers.  See the file TODO.
+
+When installing, use ./configure --prefix=/usr/ or similar if you do
+not have /usr/local/bin in your path and /usr/local/lib in your
+library path.

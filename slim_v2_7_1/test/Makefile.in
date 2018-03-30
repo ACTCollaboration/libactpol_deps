@@ -1,0 +1,138 @@
+# @configure_input@
+
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+# define DEBUG to have any value to get -O0 -g code.
+OPT     = -O3
+ifdef DEBUG
+  OPT = -O0 -g
+endif
+
+# Set by autoconf
+CC = @CC@
+CXX = @CXX@
+CPP = @CPP@
+INSTALL = @INSTALL@
+srcdir = @srcdir@
+
+CFLAGS  := @CFLAGS@  -I../include -I../src $(OPT) -Wall -fPIC -std=c99
+CXXFLAGS:= @CXXFLAGS@ $(OPT) -Wall -fPIC
+CPPFLAGS:= @CPPFLAGS@ -I../include -I../src @DEFS@
+
+BINDIR  := ../bin
+LIBDIR  := ../lib
+LDFLAGS :=  @LDFLAGS@ -fPIC -L$(LIBDIR)
+LIBS    := -lslim -lm @LIBZZIP@
+DEPEND  := .Makefile.depend
+
+%.o: %.cpp Makefile $(DEPEND)
+	$(COMPILE.cpp) $<
+
+%.o: %.c Makefile $(DEPEND)
+	$(COMPILE.c) $<
+
+%: %.c $(LIBRARY) Makefile
+	$(LINK.c) $(LIBS) -o $@ $<
+	@echo
+
+%: %.cpp $(LIBRARY) Makefile
+	$(LINK.cpp) $(LIBS) -o $@ $<
+	@echo
+
+# Don't want to link this against the library!
+generate_random_data: generate_random_data.c Makefile
+	$(LINK.c) -o $@ $<
+	@echo
+
+
+##########
+
+TARGETS     :=  generate_random_data test_slimdopen test_zirfile \
+		make_test_bitstream verify_test_bitstream
+# Targets can use implicit rules, along with the override flags added above
+
+CXXOBJS    := compute_entropy.o \
+		make_test_bitstream.o \
+		test_bitstream.o \
+		test_zirfile.o \
+		verify_test_bitstream.o
+COBJS      := generate_random_data.o \
+		test_slimdopen.o
+
+FAKE_DATA   := /tmp/fake_test_data.bin
+FAKE_ZIP_DATA := /tmp/fake_zip_data.zip
+
+all: $(TARGETS)
+fake_data: $(FAKE_ZIP_DATA) $(FAKE_DATA)
+
+$(FAKE_DATA): generate_random_data
+	@echo "Generating random data..."
+	./generate_random_data 5000000 $@
+	@echo "Done generating random data\n\n"
+
+$(FAKE_ZIP_DATA): $(FAKE_DATA)
+	-cp $(FAKE_DATA) $(FAKE_DATA).copy1 && \
+	cp $(FAKE_DATA) $(FAKE_DATA).copy2 && \
+	rm -f $(FAKE_ZIP_DATA)
+	zip --junk-paths $(FAKE_ZIP_DATA) $(FAKE_DATA) $(FAKE_DATA).copy*
+
+test: all $(FAKE_ZIP_DATA) $(FAKE_DATA)
+	@export LD_LIBRARY_PATH=$(LIBDIR); \
+	export LIBRARY_PATH=$(LIBDIR); \
+	export DYLD_LIBRARY_PATH=$(LIBDIR); \
+	export PATH=$(BINDIR):$(PATH); \
+	./test_slim.py; \
+	rm $(FAKE_DATA).raw; \
+	./test_slimdopen && cmp $(FAKE_DATA) $(FAKE_DATA).raw; \
+	@TEST_ZZIP@ \
+	./regression.py
+
+
+
+
+TEST_RESULT := test_bits.bin
+
+test2: all
+	@$(RM) -f $(TEST_RESULT)
+	./make_test_bitstream; \
+	md5sum -c .md5sum; \
+	./verify_test_bitstream; \
+	$(RM) -f $(TEST_RESULT)
+
+clean:
+	$(RM) $(TARGETS) *~
+
+distclean: clean
+	$(RM) $(TEST_RESULT) $(FAKE_DATA)
+
+again: clean all
+
+.PHONY: test clean all again fake_data
+
+########
+
+
+# Dependencies.  When cleaning, don't try to include
+depend-exists := $(wildcard $(DEPEND))
+ifeq  (depend-exists,$(DEPEND))
+  include $(DEPEND)
+endif
+
+depend: $(DEPEND)
+$(DEPEND):
+	@echo Rebuilding make dependencies
+	$(CPP) -MM $(CXXOBJS:.o=.cpp)  > .Makefile.depend
+	$(CC) -MM $(COBJS:.o=.c)  >> .Makefile.depend
+	@echo
+
+
+tags: TAGS
+TAGS: *.cpp $(HEADER) Makefile
+	etags.emacs *.cpp $(HEADER)
+
+debug:
+	make DEBUG=1 all
+
+include $(DEPEND)
