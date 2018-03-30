@@ -1,0 +1,26 @@
+This repo provides some dependencies needed by libactpol and thus by
+moby2.
+
+sla_refro-moby2-1: a C-wrapped version of a single routine from the
+open-sourced Fortran version of slalib.  Provides library slarefro for
+libactpol.
+
+slim_v2_7_1-moby2-1: a patched version of libslim.  This fixes some
+bugs in the handling of 8-bit integers.
+
+sofa_20180130: The stated version of libsofa (astrometric coordinate
+conversions), but with our own Makefile added to compile the right
+kind of shared library.
+
+
+For sla_refro and sofa, it's enough to
+
+  export PREFIX=$MOBY2_PREFIX
+  make
+  make install
+
+But for libslim you'll need to configure like this:
+
+  ./configure --prefix=$MOBY2_PREFIX --with-zzip
+  make
+  make install
