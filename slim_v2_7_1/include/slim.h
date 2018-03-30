@@ -579,7 +579,7 @@ public:
   virtual encoder *constant_encoder(int d0);
   enum data_t get_data_type() const {return data_type;} ///< Read data_type.
   /// Clear delta history.
-  void reset_previous() {prev_datum = 0u; prev_sdatum = 0u;}
+  void reset_previous();
 
 protected:
   const bool use_deltas; ///< Whether to encode successive difference values.

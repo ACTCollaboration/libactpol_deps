@@ -246,7 +246,14 @@ void encoder::encode_vector(const uint8_t *data, int ndata) {
   }
 }
 
-
+/// Reset the prev_ data members to 0 so that a new section can be
+/// encoded.
+void encoder::reset_previous()
+{
+  prev_datum = 0u;
+  prev_sdatum = 0u;
+  prev_cdatum = 0u;
+}
 
 /// Compute parameters of the encoder based on a sample of data.
 /// This is virtual--subclasses will override this with their own method.

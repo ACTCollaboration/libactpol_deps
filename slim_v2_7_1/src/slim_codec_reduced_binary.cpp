@@ -373,9 +373,18 @@ bool encoder_reduced_binary::expect_zero_compression() const {
 decoder_reduced_binary::decoder_reduced_binary(enum data_t dt, bool deltas,
 					       ibitstream *ib)
   : decoder(dt, deltas, ib) {
-  nbits = 32u;
-  if (dt == SLIM_TYPE_I16 || dt == SLIM_TYPE_U16)
+  switch (dt) {
+  case SLIM_TYPE_I8:
+  case SLIM_TYPE_U8:
+    nbits = 8u;
+    break;
+  case SLIM_TYPE_I16:
+  case SLIM_TYPE_U16:
     nbits = 16u;
+    break;
+  default:
+    nbits = 32u;
+  }
   max = UINT_MAX;
   offset = 0u;
   Overflow = 0u;
