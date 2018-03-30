@@ -1,0 +1,55 @@
+diff -rut slim_v2_7_1_pristine/include/slim.h slim_v2_7_1_patched/include/slim.h
+--- slim_v2_7_1_pristine/include/slim.h	2017-09-01 22:24:36.000000000 +0000
++++ slim_v2_7_1_patched/include/slim.h	2017-09-29 13:39:06.939165588 +0000
+@@ -579,7 +579,7 @@
+   virtual encoder *constant_encoder(int d0);
+   enum data_t get_data_type() const {return data_type;} ///< Read data_type.
+   /// Clear delta history.
+-  void reset_previous() {prev_datum = 0u; prev_sdatum = 0u;}
++  void reset_previous();
+ 
+ protected:
+   const bool use_deltas; ///< Whether to encode successive difference values.
+diff -rut slim_v2_7_1_pristine/src/slim_codec_default.cpp slim_v2_7_1_patched/src/slim_codec_default.cpp
+--- slim_v2_7_1_pristine/src/slim_codec_default.cpp	2011-11-28 23:06:15.000000000 +0000
++++ slim_v2_7_1_patched/src/slim_codec_default.cpp	2017-09-29 13:39:06.939165588 +0000
+@@ -246,7 +246,14 @@
+   }
+ }
+ 
+-
++/// Reset the prev_ data members to 0 so that a new section can be
++/// encoded.
++void encoder::reset_previous()
++{
++  prev_datum = 0u;
++  prev_sdatum = 0u;
++  prev_cdatum = 0u;
++}
+ 
+ /// Compute parameters of the encoder based on a sample of data.
+ /// This is virtual--subclasses will override this with their own method.
+diff -rut slim_v2_7_1_pristine/src/slim_codec_reduced_binary.cpp slim_v2_7_1_patched/src/slim_codec_reduced_binary.cpp
+--- slim_v2_7_1_pristine/src/slim_codec_reduced_binary.cpp	2017-09-01 22:24:36.000000000 +0000
++++ slim_v2_7_1_patched/src/slim_codec_reduced_binary.cpp	2017-09-29 13:39:06.939165588 +0000
+@@ -373,9 +373,18 @@
+ decoder_reduced_binary::decoder_reduced_binary(enum data_t dt, bool deltas,
+                                                ibitstream *ib)
+   : decoder(dt, deltas, ib) {
+-  nbits = 32u;
+-  if (dt == SLIM_TYPE_I16 || dt == SLIM_TYPE_U16)
++  switch (dt) {
++  case SLIM_TYPE_I8:
++  case SLIM_TYPE_U8:
++    nbits = 8u;
++    break;
++  case SLIM_TYPE_I16:
++  case SLIM_TYPE_U16:
+     nbits = 16u;
++    break;
++  default:
++    nbits = 32u;
++  }
+   max = UINT_MAX;
+   offset = 0u;
+   Overflow = 0u;
