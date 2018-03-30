@@ -8,7 +8,7 @@ includedir ?= $(PREFIX)/include
 SRCDIR = c/src/
 
 LIBNAME = libsofa_c.so
-HEADERS = $(SRCDIR)/sofa.h
+HEADERS = $(SRCDIR)/sofa.h $(SRCDIR)/sofam.h
 
 
 SRC = $(wildcard $(SRCDIR)/*.c)
