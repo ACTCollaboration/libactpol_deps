@@ -15,7 +15,10 @@ SRC = $(wildcard $(SRCDIR)/*.c)
 
 OBJECTS = $(SRC:.c=.o)
 
-CFLAGS += -fPIC -Wall -I$(SRCDIR)
+# Note you might want to empty CFLAGS/CPPFLAGS, before compiling, if
+# there are installed header files that conflict with the new ones.
+CPPFLAGS += -I$(SRCDIR)
+CFLAGS += -fPIC -Wall
 
 default: $(LIBNAME)
 
