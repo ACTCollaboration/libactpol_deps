@@ -69,7 +69,7 @@ const Word_t lowestNset[65] = {
 
 
 /// 32-bit constants with their lowest N bits set.
-const int32_t _dummy_lowestNset32bits[33] = {
+const uint32_t _dummy_lowestNset32bits[33] = {
   0x0,
   0x00000001, 0x00000003, 0x00000007, 0x0000000f,
   0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff,
@@ -80,7 +80,7 @@ const int32_t _dummy_lowestNset32bits[33] = {
   0x01ffffff, 0x03ffffff, 0x07ffffff, 0x0fffffff,
   0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff,
 };
-const int32_t *lowestNset32bits = _dummy_lowestNset32bits;
+const int32_t *lowestNset32bits = (int32_t*)_dummy_lowestNset32bits;
 
 
 /// Constants with their highest N bit set.
