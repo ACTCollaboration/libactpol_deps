@@ -2,6 +2,8 @@
 # Set PREFIX before installing.
 #
 
+FC ?= gfortran
+
 FSOURCE = $(wildcard *.f)
 FOBJECT = $(FSOURCE:%.f=%.o)
 
@@ -13,8 +15,6 @@ OBJECT = $(FOBJECT) $(COBJECT)
 NAME = slarefro
 LIBNAME = lib$(NAME).so
 HDRNAME = $(NAME).h
-
-FC = gfortran
 
 default: $(LIBNAME) $(HDRNAME)
 

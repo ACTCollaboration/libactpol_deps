@@ -1,7 +1,7 @@
 # Makefile.  Generated from Makefile.in by configure.
 
 # From autoconf
-prefix = /usr/local
+prefix = /mnt/so1/shared/software/moby2_deps
 exec_prefix = ${prefix}
 datarootdir = ${prefix}/share
 INSTALL = /usr/bin/install -c
